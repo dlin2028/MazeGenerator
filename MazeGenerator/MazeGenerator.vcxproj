@@ -123,11 +123,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\UnionFind\UnionFind\UnionFind.cpp" />
+    <ClCompile Include="Maze.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="UnionFind.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\UnionFind\UnionFind\UnionFind.h" />
+    <ClInclude Include="Maze.h" />
+    <ClInclude Include="UnionFind.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
