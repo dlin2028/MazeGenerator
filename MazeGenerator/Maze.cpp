@@ -19,6 +19,7 @@ Maze::~Maze()
 
 void Maze::Generate()
 {
+	srand(5);
 	find = std::make_unique<UnionFind>(width * height);
 
 	while (find->NumSets() != 1)
@@ -157,20 +158,28 @@ vector<int> Maze::getEdges(int node)
 		switch (ends[i])
 		{
 		case 0:
-			if(starts[i] == node || starts[i] == node - width)
+			if(starts[i] == node)
 				output.push_back(node - width);
-			break;
-		case 1:
-			if (starts[i] == node || starts[i] == node + width)
+			else if(starts[i] == node + width)
 				output.push_back(node + width);
 			break;
+		case 1:
+			if (starts[i] == node)
+				output.push_back(node + width);
+			else if (starts[i] == node - width)
+				output.push_back(node - width);
+			break;
 		case 2:
-			if (starts[i] == node || starts[i] == node - 1)
+			if (starts[i] == node || starts[i] == node + 1)
 				output.push_back(node - 1);
+			else if (starts[i] == node + 1)
+				output.push_back(node + 1);
 			break;
 		default:
-			if (starts[i] == node || starts[i] == node + 1)
+			if (starts[i] == node)
 				output.push_back(node + 1);
+			else if (starts[i] == node - 1)
+				output.push_back(node - 1);
 			break;
 		}
 	}
@@ -182,9 +191,11 @@ vector<int> Maze::getPath(int start, int end)
 {
 	queue<int> queue;
 	vector<int> discovered;
+	discovered.clear();
 	std::map<int, int> parents;
 
 	queue.push(start);
+	discovered.push_back(start);
 
 	int curr;
 
@@ -195,19 +206,21 @@ vector<int> Maze::getPath(int start, int end)
 
 		if (curr == end)
 		{
-			vector<int> path;
+			vector<int> path; 
 			while (curr != start)
 			{
-				path.push_back(parents[curr]);
+				path.push_back(curr);
 				curr = parents[curr];
 			}
+			path.push_back(curr);
 			return path;
 		}
 		vector<int> edges = getEdges(curr);
 		for (int i = 0; i < edges.size(); i++)
 		{
-			if (std::find(edges.begin(), edges.end(), edges[i]) != edges.end())
+			if (std::find(discovered.begin(), discovered.end(), edges[i]) == discovered.end())
 			{
+				discovered.push_back(edges[i]);
 				parents[edges[i]] = curr;
 				queue.push(edges[i]);
 			}
@@ -242,6 +255,13 @@ void Maze::Display()
 
 			if (rect->getFillColor() != sf::Color::Green)
 			{
+				if (start != nullptr && dest != nullptr)
+				{
+					start = nullptr;
+					dest = nullptr;
+					generateRects();
+				}
+
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
 					if (start != nullptr)
@@ -273,10 +293,32 @@ void Maze::Display()
 						invPosMap[posMap[i]] = i;
 					}
 					vector<int> path = getPath(invPosMap[s], invPosMap[d]);
+					
 
 					for (int i = 0; i < path.size(); i++)
 					{
-						rects[posMap[path[i]]].setFillColor(sf::Color::Yellow);
+						int pos = posMap[path[i]];
+						rects[pos].setFillColor(sf::Color::Black);
+						if (i != 0)
+						{
+							int diff =  path[i - 1] - path[i];
+							if (diff == 1)
+							{
+								rects[pos + 1].setFillColor(sf::Color::Black);
+							}
+							else if (diff == -1)
+							{
+								rects[pos - 1].setFillColor(sf::Color::Black);
+							}
+							else if (diff == width)
+							{
+								rects[pos + outWidth].setFillColor(sf::Color::Black);
+							}
+							else //if (diff == -width)
+							{
+								rects[pos - outWidth].setFillColor(sf::Color::Black);
+							}
+						}
 					}
 				}
 			}
