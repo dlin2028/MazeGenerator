@@ -2,6 +2,7 @@
 #include <queue>
 #include <algorithm>
 #include <map>
+#include <iostream>
 
 using namespace std;
 
@@ -83,7 +84,7 @@ void Maze::Generate()
 vector<sf::RectangleShape> Maze::generateRects()
 {
 	vector<bool> output;
-
+	posMap.clear();
 	for (int i = 0; i < height; i++)
 	{
 		for (int j = 0; j < (width * 2) + 1; j++)
@@ -170,7 +171,7 @@ vector<int> Maze::getEdges(int node)
 				output.push_back(node - width);
 			break;
 		case 2:
-			if (starts[i] == node || starts[i] == node + 1)
+			if (starts[i] == node)
 				output.push_back(node - 1);
 			else if (starts[i] == node + 1)
 				output.push_back(node + 1);
@@ -240,6 +241,9 @@ void Maze::Display()
 	sf::RectangleShape* start = nullptr;
 	sf::RectangleShape* dest = nullptr;
 
+	bool clearPath = false;
+	int lastIndex = -1;
+
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -251,17 +255,33 @@ void Maze::Display()
 		if (event.type == sf::Event::MouseButtonPressed)
 		{
 			sf::Vector2i position = sf::Mouse::getPosition(window);
-			sf::RectangleShape* rect = &rects[(position.x / 10) % outWidth + (position.y / 10) * outWidth];
+			int index = (position.x / 10) % outWidth + (position.y / 10) * outWidth;
+
+			if (index < 0 || index >= rects.size())
+			{
+				continue;
+			}
+			else if (index == lastIndex)
+			{
+				continue;
+			}
+			lastIndex = index;
+			std::cout << index << std::endl;
+
+			if (clearPath)
+			{
+				rects = generateRects();
+				start = nullptr;
+				dest = nullptr;
+				clearPath = false;
+				lastIndex = -1;
+				continue;
+			}
+
+			sf::RectangleShape* rect = &rects[index];
 
 			if (rect->getFillColor() != sf::Color::Green)
 			{
-				if (start != nullptr && dest != nullptr)
-				{
-					start = nullptr;
-					dest = nullptr;
-					generateRects();
-				}
-
 				if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
 				{
 					if (start != nullptr)
@@ -271,7 +291,7 @@ void Maze::Display()
 					start = rect;
 					start->setFillColor(sf::Color::Red);
 				}
-				else
+				else// if(sf::Mouse::isButtonPressed(sf::Mouse::Right))
 				{
 					if (dest != nullptr)
 					{
@@ -281,18 +301,25 @@ void Maze::Display()
 					dest->setFillColor(sf::Color::Blue);
 				}
 
+
 				if (start != nullptr && dest != nullptr)
 				{
+					clearPath = true;
+
 					sf::Vector2f pos = start->getPosition();
 					int s = (int)(pos.x / 10) % outWidth + (int)(pos.y / 10) * outWidth;
 					pos = dest->getPosition();
 					int d = (int)(pos.x / 10) % outWidth + (int)(pos.y / 10) * outWidth;
 
+					invPosMap.clear();
 					for (int i = 0; i < posMap.size(); i++)
 					{
 						invPosMap[posMap[i]] = i;
 					}
-					vector<int> path = getPath(invPosMap[s], invPosMap[d]);
+					int deleteme = invPosMap[s];
+					int deleteme2 = invPosMap[d];
+
+					vector<int> path = getPath(deleteme, deleteme2);
 					
 
 					for (int i = 0; i < path.size(); i++)
